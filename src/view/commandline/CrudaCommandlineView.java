@@ -32,7 +32,7 @@ public class CrudaCommandlineView {
       + " fields"
       + "\n3. READ the entity of the type with id"
       + "\n4. READ all entities of the type"
-      + "\n5. READ all entities of the type with some filters"
+      + "\n5. UPDATE an entity of the type with the specific fields"
       + "\n6. UPDATE an entity of the type with the specified id, with"
       + " the specific fields"
       + "\n7. DELETE an entity of the type with the specified id"
@@ -129,7 +129,7 @@ public class CrudaCommandlineView {
           System.out.println("2 put");
 
           // TODO input check.
-          System.out.print("Number of Entities: ");
+          System.out.print("Number of Entities to create: ");
           int iterations = input.nextInt();
           for (int i = 0; i < iterations; i++) {
 
@@ -147,7 +147,7 @@ public class CrudaCommandlineView {
 
             // If one of the creation fails, terminates option immediately.
             if (!processSuccess) {
-              System.out.println("First " + i + " entities stored, yet the ith"
+              System.out.println("First " + i + " entities stored, and the " + i + "th"
                   + "one failed.");
               break;
             }
@@ -172,7 +172,6 @@ public class CrudaCommandlineView {
         }
 
         case "4": {
-          System.out.println("4 put");
 
           @SuppressWarnings("unchecked")
           HashMap<Integer, EntityInterface> entityStorage
@@ -197,8 +196,28 @@ public class CrudaCommandlineView {
         }
 
         case "5": {
-          processSuccess = (boolean) controller.process(entityType, option,
-              null);
+          
+          System.out.print("Number of Entities to update: ");
+          int iterations = input.nextInt();
+          for (int i = 0; i < iterations; i++) {
+            
+            // Asks for input for each field key.
+            for (String fieldKey : fieldKeys) {
+
+              // Lets controller decide field's validity.
+              String someField = processFieldInput(fieldKey, input);
+              fields.put(fieldKey, someField);
+            }
+            processSuccess = (boolean) controller.process(entityType, option,
+                null);
+
+            // If one of the creation fails, terminates option immediately.
+            if (!processSuccess) {
+              System.out.println("First " + i + " entities stored, and the " + i + "th"
+                  + "one failed.");
+              break;
+            }
+          }
           break;
         }
 

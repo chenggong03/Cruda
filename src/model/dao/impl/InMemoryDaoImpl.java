@@ -160,6 +160,31 @@ public class InMemoryDaoImpl implements Crudable {
     }
     return filteredEntityStorage;
   }
+  
+  /**
+   * UPDATE all entities of the type with the fields.
+   * TODO questionable implementation.
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param id
+   *          is the id of the entity to be read
+   * @param fields
+   *          contains the user specified info to update
+   * @return true if modified, false otherwise
+   */
+  @Override
+  public boolean update(String entityName, HashMap<String, Object> fields) {
+    HashMap<Integer, EntityInterface> entityStorage = read(entityName);
+    if (entityStorage == null) return false;
+    for (EntityInterface entity : entityStorage.values()) {
+      if (!reflectiveSet(entityName, fields, entity, null)) {
+        return false;
+      }
+    }
+    return true;
+
+
+  }
 
   /**
    * UPDATE an entity of the type with the specific id, with the fields. TODO
@@ -178,7 +203,6 @@ public class InMemoryDaoImpl implements Crudable {
       HashMap<String, Object> fields) {
     EntityInterface entity = read(entityName, id);
     if (entity == null) {
-      System.out.println("entity == null");
       return false;
     }
 
@@ -227,7 +251,7 @@ public class InMemoryDaoImpl implements Crudable {
         } else {
           paramClazz = String.class;
         }
-
+        
         // Converts the filtering key to the method name, i.e. id -> getId.
         // command should be "set" or "get" only.
         filterKey = "set" + filterKey.substring(0, 1).toUpperCase()
@@ -237,12 +261,17 @@ public class InMemoryDaoImpl implements Crudable {
         Method method = clazz.getMethod(filterKey, paramClazz);
 
         // TODO use a HashMap/external file for the keys
+        if (paramClazz == int.class) {
+          filterValue = Integer.parseInt((String) filterValue);
+        }
+        
+        // TODO use a HashMap/external file for the keys
         method.invoke(entity, filterValue);
       }
 
       // entityStorage is only used when create method is called.
       if (entityStorage != null) {
-        entityStorage.put((Integer)fields.get("id"), entity);
+        entityStorage.put(Integer.parseInt((String) fields.get("id")), entity);
       }
 
     } catch (ClassNotFoundException | NoSuchMethodException

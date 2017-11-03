@@ -43,6 +43,11 @@ public interface Crudable {
       HashMap<String, Object> filters);
 
   /**
+   * UPDATE all entites of the type with the fields.
+   */
+  public boolean update(String entityName, HashMap<String, Object> fields);
+
+  /**
    * UPDATE an entity of the type with the specific id, with the fields.
    */
   public abstract boolean update(String entityName, int id,

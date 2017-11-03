@@ -57,7 +57,11 @@ public class CrudaController {
     // case 5 will be null.
     int id = -1;
     if (fields != null && fields.get("id") != null) {
-      id = (int) fields.get("id");
+      try {
+        id = Integer.parseInt((String) fields.get("id"));
+      } catch (ClassCastException e) {
+        id = (int) fields.get("id");
+      }
     }
 
     // TODO use a HashMap/external file for the options.
@@ -66,7 +70,7 @@ public class CrudaController {
     case "1":
       return dao.create(entityName, fields);
 
-    case "2":
+    case "2": // same as 1
       return dao.create(entityName, fields);
 
     case "3":
@@ -75,17 +79,15 @@ public class CrudaController {
     case "4":
       return dao.read(entityName);
 
-    // TODO implements filters.
     case "5":
-      return false;
+      return dao.update(entityName, id, fields);
 
-    case "6":
+    case "6": // same as 5
 
       // TODO reduce the redundancy of id in fields.
       // No need to check for parsing exceptions since handled in
       // processFieldInput in View
-      return dao.update(entityName, id,
-          fields);
+      return dao.update(entityName, id, fields);
 
     case "7":
       return dao.delete(entityName, id);
