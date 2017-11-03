@@ -1,5 +1,8 @@
 # Cruda
-This is an extendable structure for doing CRUD operations on all kinds of entities.
+Cheng Gong, Nov. 3rd, 2017.
+Cruda project, short for Crudability, is an extendable structure for doing CRUD operations on all kinds of entities.
+
+Github: https://github.com/chenggong03/Cruda
 
 The main focus on this project up till this point is to create an structure with the maximum extendability. It utilizes ideas of MVC, Java Reflection, POJO, DAO, and the flexibility of Interface, etc. Yet due to the limit of time, the project still has tons of implementations todo, such as
 1. parsing JSON or CSV as configuration files for the POJOs and interactive options and constant strings, 
@@ -10,4 +13,4 @@ The main focus on this project up till this point is to create an structure with
 6. etc.
 
 I try comment extensively for readability and maintainability. I also try to reuse the code and cleanup the coding as I write. One important reason I used Java Reflection is to use this project for anything CRUB-operational.
-It will also be great to practice my skills with Java webapp again using Spring, Struct, and Hibernate, or some other similar frameworks. Java webapp along with JSP pages are still powerful, and they contain a lot of great designing concepts for us programmers to learn.
+It's a shame that I didn't have a chance to practice my skills with Java webapp again using Spring, Struct, and Hibernate, or some other similar frameworks. Java webapp along with JSP pages are still powerful, and they contain a lot of great designing concepts for us programmers to learn. Therefore, the webapp is in my future plan as well.
