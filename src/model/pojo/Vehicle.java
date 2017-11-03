@@ -12,6 +12,8 @@ public class Vehicle implements EntityInterface {
   private String make;
   private String model;
 
+  public Vehicle() {}
+  
   public Vehicle(int id, int year, String make, String model) {
     this.id = id;
     this.year = year;

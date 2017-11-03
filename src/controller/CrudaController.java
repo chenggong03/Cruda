@@ -20,22 +20,38 @@ public class CrudaController {
   
   /**
    * Decides whether the user input to the key are valid.
-   * TODO implement.
+   * TODO use a HashMap/external file for the keys.
    */
-  public boolean judge(String elementKey, Object element) {
-    return true;
+  public String judge(String fieldKey, String field) {
+    if ("id".equals(fieldKey)) {
+      try {
+        Integer.parseInt((String) field);
+      } catch (NumberFormatException e) {
+        return field + "id not valid integer.";
+      }
+    } else if ("year".equals(fieldKey)) {
+      try {
+        Integer.parseInt((String) field);
+      } catch (NumberFormatException e) {
+        return field + "year not valid integer.";
+      }
+    }
+    
+    return null;
   }
   
-  public boolean process(String entityName, String option, HashMap<String, Object> elements) {
+  // TODO use a HashMap/external file for the options
+  public Object process(String entityName, String option, HashMap<String, Object> fields) {
     switch (option) {
     
     case "1":
-      return dao.create(entityName, elements);
+      return dao.create(entityName, fields);
       
     case "2":
       break;
     case "3":
-      break;
+      return dao.read(entityName, Integer.parseInt((String) fields.get("id")));
+
     case "4":
       break;
     case "5":

@@ -43,13 +43,27 @@ public class InMemoryDaoImpl implements Crudable {
       for (Map.Entry<String, Object> field : fields.entrySet()) {
         String filterKey = field.getKey();
         Object filterValue = field.getValue();
+        
+        // TODO use a HashMap/external file for the keys
+        Class<?> paramClazz;
+        if ("id".equals(filterKey) || "year".equals(filterKey)) {
+          paramClazz = int.class;
+        } else {
+          paramClazz = String.class;
+        }
 
         // Converts the filtering key to the method name, i.e. id -> getId.
         filterKey = "set" + filterKey.substring(0, 1).toUpperCase()
             + filterKey.substring(1);
-        Method method = clazz.getMethod(filterKey);
-
+        
+        
         // Calls the setter method on the field.
+        Method method = clazz.getMethod(filterKey, paramClazz);
+        
+        // TODO use a HashMap/external file for the keys
+        if (paramClazz == int.class) {
+          filterValue = Integer.parseInt((String) filterValue);
+        }
         method.invoke(entity, filterValue);
       }
 
@@ -57,15 +71,18 @@ public class InMemoryDaoImpl implements Crudable {
       // method.invoke method call above.
       Object id = fields.get("id");
       if (id == null) {
+        System.out.println("id == null");
         return false;
       }
 
       // Stores the new entity back in memory.
-      entityStorage.put((Integer) id, entity);
+      entityStorage.put(Integer.parseInt((String) id), entity);
 
     } catch (ClassNotFoundException | NoSuchMethodException
         | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException | InstantiationException e) {
+      System.out.println("Exception: " + e.toString());
+      e.printStackTrace();
       return false;
     }
 
@@ -95,7 +112,11 @@ public class InMemoryDaoImpl implements Crudable {
    */
   @Override
   public EntityInterface read(String entityName, int id) {
-    return storage.get(entityName).get(id);
+    HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
+    if (entityStorage == null) {
+      return null;
+    }
+    return entityStorage.get(id);
   }
 
   /**
@@ -116,6 +137,9 @@ public class InMemoryDaoImpl implements Crudable {
 
     HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
     HashMap<Integer, EntityInterface> filteredEntityStorage = new HashMap<>();
+    if (entityStorage == null) {
+      return filteredEntityStorage;
+    }
 
     // Iterates through every entity to filter, and put entities that passed
     // the filters into filteredEntityStorage to return
@@ -156,7 +180,7 @@ public class InMemoryDaoImpl implements Crudable {
       } catch (ClassNotFoundException | NoSuchMethodException
           | IllegalAccessException | IllegalArgumentException
           | InvocationTargetException e) {
-        return null;
+        return new HashMap<Integer, EntityInterface>();
       }
 
     }
@@ -171,6 +195,9 @@ public class InMemoryDaoImpl implements Crudable {
   public boolean update(String entityName, int id,
       HashMap<String, Object> fields) {
     EntityInterface entity = read(entityName, id);
+    if (entity == null) {
+      return false;
+    }
 
     try {
       @SuppressWarnings("unchecked")
@@ -207,7 +234,11 @@ public class InMemoryDaoImpl implements Crudable {
    */
   @Override
   public boolean delete(String entityName, int id) {
-    return storage.get(entityName).remove(id) != null;
+    HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
+    if (entityStorage == null) {
+      return false;
+    }
+    return entityStorage.remove(id) != null;
   }
 
 }
