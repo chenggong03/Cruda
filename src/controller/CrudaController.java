@@ -6,6 +6,7 @@ import model.dao.impl.InMemoryDaoImpl;
 
 /**
  * Processes data between the view and the model.
+ * 
  * @author gongcheng
  */
 public class CrudaController {
@@ -18,8 +19,11 @@ public class CrudaController {
 
   /**
    * Decides whether the user input to the key are valid.
-   * @param fieldKey is the key that serve as the criteria for the field
-   * @param field is the word to be judged
+   * 
+   * @param fieldKey
+   *          is the key that serve as the criteria for the field
+   * @param field
+   *          is the word to be judged
    * @return an error message if the field is not valid for the fieldKey, return
    *         null otherwise TODO use a HashMap/external file for the keys.
    */
@@ -36,11 +40,15 @@ public class CrudaController {
   }
 
   /**
-   * Processes the client request to the specified entity type, given the
-   * option signifying the action
-   * @param entityName is the entity type to be acted upon
-   * @param option indicates the action to process
-   * @param fields contains the user specified info
+   * Processes the client request to the specified entity type, given the option
+   * signifying the action
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param option
+   *          indicates the action to process
+   * @param fields
+   *          contains the user specified info
    * @return the outcome of the process
    */
   public Object process(String entityName, String option,
@@ -48,8 +56,8 @@ public class CrudaController {
 
     // case 5 will be null.
     int id = -1;
-    if (fields != null) {
-      id = Integer.parseInt((String) fields.get("id"));
+    if (fields != null && fields.get("id") != null) {
+      id = (int) fields.get("id");
     }
 
     // TODO use a HashMap/external file for the options.
@@ -67,6 +75,7 @@ public class CrudaController {
     case "4":
       return dao.read(entityName);
 
+    // TODO implements filters.
     case "5":
       return false;
 

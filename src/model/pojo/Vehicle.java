@@ -2,6 +2,7 @@ package model.pojo;
 
 /**
  * Vehicle POJO class that is the basic unit of the vehicle
+ * 
  * @author gongcheng
  */
 public class Vehicle implements EntityInterface {
@@ -10,8 +11,9 @@ public class Vehicle implements EntityInterface {
   private String make;
   private String model;
 
-  public Vehicle() {}
-  
+  public Vehicle() {
+  }
+
   public Vehicle(int id, int year, String make, String model) {
     this.id = id;
     this.year = year;
@@ -23,7 +25,7 @@ public class Vehicle implements EntityInterface {
   public int getId() {
     return id;
   }
-  
+
   public void setId(int id) {
     this.id = id;
   }

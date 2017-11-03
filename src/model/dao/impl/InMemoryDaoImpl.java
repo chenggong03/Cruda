@@ -11,6 +11,7 @@ import model.pojo.EntityInterface;
 
 /**
  * Implements the CRUD methods of DAO and stores entities in memory.
+ * 
  * @author gongcheng
  */
 public class InMemoryDaoImpl implements Crudable {
@@ -21,10 +22,13 @@ public class InMemoryDaoImpl implements Crudable {
       = new HashMap<String, HashMap<Integer, EntityInterface>>();
 
   /**
-   * CREATE an entity of the type with the specific fields.
-   * Id is not self generated and can be overwritten.
-   * @param entityName is the entity type to be acted upon
-   * @param fields contains the user specified info
+   * CREATE an entity of the type with the specific fields. Id is not self
+   * generated and can be overwritten.
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param fields
+   *          contains the user specified info
    * @return true if successfully created
    */
   @Override
@@ -34,15 +38,18 @@ public class InMemoryDaoImpl implements Crudable {
       entityStorage = new HashMap<>();
       storage.put(entityName, entityStorage);
     }
-    
+
     return reflectiveSet(entityName, fields, null, entityStorage);
   }
 
   /**
-   * CREATE a list of entities of the type with the list of specific fields.
-   * Id is not self generated and can be overwritten.
-   * @param entityName is the entity type to be acted upon
-   * @param fieldList contains the user specified lists of fields
+   * CREATE a list of entities of the type with the list of specific fields. Id
+   * is not self generated and can be overwritten.
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param fieldList
+   *          contains the user specified lists of fields
    * @return false if one of the entity creation fails.
    */
   @Override
@@ -60,8 +67,11 @@ public class InMemoryDaoImpl implements Crudable {
 
   /**
    * GET the entity of the type with id. Returns null if none.
-   * @param entityName is the entity type to be acted upon
-   * @param id is the id of the entity to be read
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param id
+   *          is the id of the entity to be read
    * @return the read EntityInterface, null if none read
    */
   @Override
@@ -75,7 +85,9 @@ public class InMemoryDaoImpl implements Crudable {
 
   /**
    * GET all entities of the type. The returned HashMap could be empty.
-   * @param entityName is the entity type to be acted upon
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
    * @return a HashMap of EntityInterfaces of that entity type
    */
   @Override
@@ -86,8 +98,11 @@ public class InMemoryDaoImpl implements Crudable {
   /**
    * GET all entities of the type with some filters (String is the field nam,
    * Object is the filter value). The returned HashMap could be empty.
-   * @param entityName is the entity type to be acted upon
-   * @param filters contains the user specified info to filter the entities
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param filters
+   *          contains the user specified info to filter the entities
    * @return a HashMap of filtered EntityInterfaces of that entity type
    */
   @Override
@@ -147,11 +162,15 @@ public class InMemoryDaoImpl implements Crudable {
   }
 
   /**
-   * UPDATE an entity of the type with the specific id, with the fields.
-   * TODO This method should not update the id, need to do a check.
-   * @param entityName is the entity type to be acted upon
-   * @param id is the id of the entity to be read
-   * @param fields contains the user specified info to update
+   * UPDATE an entity of the type with the specific id, with the fields. TODO
+   * This method should not update the id, need to do a check.
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param id
+   *          is the id of the entity to be read
+   * @param fields
+   *          contains the user specified info to update
    * @return true if modified, false otherwise
    */
   @Override
@@ -166,32 +185,36 @@ public class InMemoryDaoImpl implements Crudable {
     return reflectiveSet(entityName, fields, entity, null);
 
   }
-  
-  
+
   /**
    * Helper method for only create and update, since they user similar setter
    * operations.
-   * @param entityName is the entity type to be acted upon
-   * @param fields contains the user specified info to update
-   * @param entity is the entity to be acted upon. It should be null when using
-   * create method
-   * @param entityStorage is the entityStorage used to store entity in. It
-   * should be null when using update method
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param fields
+   *          contains the user specified info to update
+   * @param entity
+   *          is the entity to be acted upon. It should be null when using
+   *          create method
+   * @param entityStorage
+   *          is the entityStorage used to store entity in. It should be null
+   *          when using update method
    * @return true if modified, false otherwise
    */
-  private boolean reflectiveSet(String entityName, HashMap<String, Object>
-      fields, EntityInterface entity, HashMap<Integer, EntityInterface>
-      entityStorage) {
+  private boolean reflectiveSet(String entityName,
+      HashMap<String, Object> fields, EntityInterface entity,
+      HashMap<Integer, EntityInterface> entityStorage) {
     try {
       @SuppressWarnings("unchecked")
       Class<? super EntityInterface> clazz = (Class<? super EntityInterface>) Class
           .forName("model.pojo." + entityName);
-      
+
       // entity is only null when create method is called.
       if (entity == null) {
         entity = (EntityInterface) clazz.newInstance();
       }
-      
+
       // Updates the fields to the entity.
       for (Map.Entry<String, Object> field : fields.entrySet()) {
         String filterKey = field.getKey();
@@ -204,28 +227,24 @@ public class InMemoryDaoImpl implements Crudable {
         } else {
           paramClazz = String.class;
         }
-    
+
         // Converts the filtering key to the method name, i.e. id -> getId.
         // command should be "set" or "get" only.
         filterKey = "set" + filterKey.substring(0, 1).toUpperCase()
             + filterKey.substring(1);
-        
-        
+
         // Calls the setter method on the field.
         Method method = clazz.getMethod(filterKey, paramClazz);
-        
+
         // TODO use a HashMap/external file for the keys
-        if (paramClazz == int.class) {
-          filterValue = Integer.parseInt((String) filterValue);
-        }
         method.invoke(entity, filterValue);
       }
-      
+
       // entityStorage is only used when create method is called.
       if (entityStorage != null) {
-        entityStorage.put(Integer.parseInt((String)fields.get("id")), entity);
+        entityStorage.put((Integer)fields.get("id"), entity);
       }
-      
+
     } catch (ClassNotFoundException | NoSuchMethodException
         | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException | InstantiationException e) {
@@ -233,13 +252,16 @@ public class InMemoryDaoImpl implements Crudable {
       return false;
     }
     return true;
-    
+
   }
 
   /**
    * DELETE an entity of the type with the specific id.
-   * @param entityName is the entity type to be acted upon
-   * @param id is the id of the entity to be read
+   * 
+   * @param entityName
+   *          is the entity type to be acted upon
+   * @param id
+   *          is the id of the entity to be read
    * @return true if an non-null entity is deleted
    */
   @Override

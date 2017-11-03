@@ -6,8 +6,9 @@ import java.util.List;
 import model.pojo.EntityInterface;
 
 /**
- * Defines the behavior of all the needed CRUD methods, according to
- * the need of the clients.
+ * Defines the behavior of all the needed CRUD methods, according to the need of
+ * the clients.
+ * 
  * @author gongcheng
  */
 public interface Crudable {

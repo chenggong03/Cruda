@@ -40,12 +40,12 @@ public class CrudaCommandlineView {
 
   public static final String PROMPT_ENTITY = "What Entity Type are you working"
       + "on today? (q to quit)";
-  
+
   public static final String THANK_YOU = "Thank you for using Cruda!";
-  
+
   public static final String PROMPT_ENTITY_SIGN = "> ";
   public static final String PROMPT_OPTION_SIGN = ">> ";
-  
+
   // Given a list of possible entity type, prompts the client to select
   // which entity type they will be using.
   // TODO Link the listOfKeys to the actual Pojo config.
@@ -57,7 +57,8 @@ public class CrudaCommandlineView {
   /**
    * Parses the command line and interacts with the user.
    * 
-   * @param args is the command-line arguments, not used
+   * @param args
+   *          is the command-line arguments, not used
    */
   public static void main(String[] args) {
 
@@ -174,7 +175,8 @@ public class CrudaCommandlineView {
           System.out.println("4 put");
 
           @SuppressWarnings("unchecked")
-          HashMap<Integer, EntityInterface> entityStorage = (HashMap<Integer, EntityInterface>) controller
+          HashMap<Integer, EntityInterface> entityStorage
+          = (HashMap<Integer, EntityInterface>) controller
               .process(entityType, option, null);
           if (entityStorage == null) {
             System.out.println("no " + entityType);
