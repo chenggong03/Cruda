@@ -1,8 +1,8 @@
 package model.pojo;
 
 /**
- * Describes every pojo entity with at least an Id
- * 
+ * Describes every pojo entity with at least an Id.
+ * Id is not self generated.
  * @author gongcheng
  *
  */

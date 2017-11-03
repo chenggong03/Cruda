@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import controller.CrudaController;
-import model.dao.impl.InMemoryDaoImpl;
 
 /**
  * Displays the View to client on command line.
@@ -21,7 +20,7 @@ public class CrudaCommandlineView {
   public static final String WELCOME
       = "Welcom to Cruda v1.0, your CRUD entity management system, built by"
       + " Cheng Gong, 2017.\n";
-    public static final String USAGE
+  public static final String USAGE
       = "Options:\n"
       + "1. CREATE an entity (i.e. Vehicle) of the type with the specified"
       + " fields"
@@ -35,6 +34,14 @@ public class CrudaCommandlineView {
       + "\n7. DELETE an entity of the type with the specified id"
       + "\nq. type 'q' to quit this Entity Storage.\n";
 
+  //Given a list of possible entity type, prompts the client to select
+  // which entity type they will be using.
+  // TODO Link the listOfKeys to the actual Pojo config.
+  // TODO use a HashMap to correspond the fieldValue with its type,
+  // so that no need for a just String[]. 
+  private static HashMap<String, String[]> listOfKeys = new HashMap<>();
+  private static String[] fieldKeys;
+
   /**
    * Parses the command line and interacts with the user.
    * 
@@ -47,17 +54,8 @@ public class CrudaCommandlineView {
     // Construct a Scanner that produces values scanned from standard input.
     Scanner input = new Scanner(System.in);
     
-    // Given a list of possible entity type, prompts the client to select
-    // which entity type they will be using.
-    // TODO Link the listOfKeys to the actual Pojo config.
-    // TODO use a HashMap to correspond the elementValue with its type,
-    // so that no need for a just String[]. 
-    HashMap<String, String[]> listOfKeys = new HashMap<>();
-    String[] vehicleKeys = {"year", "make", "model"};
-    listOfKeys.put("Vehicle", vehicleKeys);
-    
-    String[] elementKeys;
-    
+    generateListOfKeys();
+        
     // Prompts the client for Entity Type.
     System.out.println("What Entity Type are you working on today? (q to quit)");
     System.out.print("> ");
@@ -71,23 +69,23 @@ public class CrudaCommandlineView {
         break;
       }
       
-      elementKeys = listOfKeys.get(entityType);
-      while (elementKeys == null) {
+      fieldKeys = listOfKeys.get(entityType);
+      while (fieldKeys == null) {
         System.out.println("None Entity Type. Try Again.");
         System.out.print("> ");
         entityType = input.next();
-        elementKeys = listOfKeys.get(entityType);
+        fieldKeys = listOfKeys.get(entityType);
       }
       
       System.out.print(USAGE + ">> ");
 
-      // While there is more input (client has not hit EOF),
       // Prompts the client for the option.
       boolean toQuit = false;
+      boolean toPrintError = false;
       while (input.hasNext()) {
         
-        // collect client's input elements
-        HashMap<String, Object> elements = new HashMap<>();
+        // Collects client's input fields.
+        HashMap<String, Object> fields = new HashMap<>();
         
         // Reads option input.
         String option = input.next();
@@ -95,25 +93,49 @@ public class CrudaCommandlineView {
         
         case "1":
           System.out.println("1 put");
-          elements.put("entityType", "Vehicle");
           
-          System.out.print("id: ");
-          elements.put("id", Integer.parseInt(input.next()));
-          
-          for (String elementKey : elementKeys) {
-            System.out.print(elementKey + ": ");
-            
-            // TODO use a HashMap to correspond the elementValue with its type.
-            if (elementKey.equals("year")) {
-              elements.put(elementKey, Integer.parseInt(input.next()));
-            } else {
-              elements.put(elementKey, input.next());
+          // Requires valid integer input for id.
+          // TODO move these code to Controller.
+          int idInput = -1;
+          boolean idOkay = true;
+          do {
+            if (!idOkay) {
+              System.out.println("id not valid integer");
             }
+            System.out.print("id: ");
+            try {
+              idInput = Integer.parseInt(input.next());
+              idOkay = true;
+            } catch (NumberFormatException e) {
+              idOkay = false;
+            }
+          } while (!idOkay);
+          fields.put("id", idInput);
+
+          // Asks for input for each field key.
+          for (String fieldKey : fieldKeys) {
+            Object field;
+
+            do {
+              System.out.print(fieldKey + ": ");
+              
+              // TODO use a HashMap to correspond the fieldValue with its type.
+              if (fieldKey.equals("year")) {
+                field = Integer.parseInt(input.next());
+                
+              // put make and model in fields
+              } else {
+                field = input.next();
+              }
+
+            // Lets controller decide field's validity.
+            } while (!controller.judge(fieldKey, field));
+            fields.put(fieldKey, field);
           }
           
+          // Lets controller process these fields.
+          controller.process(entityType, "1", fields);
           
-          // TODO
-          // Lets CrudaController process these.
           break;
         case "2":
           System.out.println("2 put");
@@ -137,27 +159,40 @@ public class CrudaCommandlineView {
           toQuit = true;
           break;
         default:
-          System.out.println("Invalid input: " + option);
-          System.out.println(USAGE);
+          toPrintError = true;
           break;
         }
         
+        // Deals with the quit option.
         if (toQuit) {
           System.out.println("Exiting Storage for Entity Type: " + entityType);
+          System.out.println("What Entity Type are you working on today? (q to quit)");
+          System.out.print("> ");
           break;
         }
         
-        // TODO
-        controller.delegate("HI");
+        // Checks if an invalid option is entered.
+        if (toPrintError) {
+          System.out.println("Invalid input: " + option);
+          System.out.println(USAGE);
+          toPrintError = false;
+        } else {
+          System.out.println("Option " + option + " processed;");
+        }
         System.out.print(">> ");
       }
-
-      System.out.println("What Entity Type are you working on today? (q to quit)");
-      System.out.print("> ");
     }
     
     System.out.println("Thank you for using Cruda!");
     input.close();
+  }
+
+  /**
+   * Helps generate list of default keys at the start of the program.
+   */
+  private static void generateListOfKeys() {
+    String[] vehicleKeys = {"year", "make", "model"};
+    listOfKeys.put("Vehicle", vehicleKeys);
   }
 
 }

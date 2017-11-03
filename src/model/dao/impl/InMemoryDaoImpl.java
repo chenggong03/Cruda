@@ -11,7 +11,7 @@ import model.pojo.EntityInterface;
 
 /**
  * Implements the CRUD methods of DAO and store entities in memory.
- * 
+ * Id is not self generated.
  * @author gongcheng
  *
  */
