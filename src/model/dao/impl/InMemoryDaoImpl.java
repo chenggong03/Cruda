@@ -17,99 +17,21 @@ import model.pojo.EntityInterface;
  */
 public class InMemoryDaoImpl implements Crudable {
 
-  // TODO use one HashMap for each EntityInterface Type, instead of one
-  // storage for
-  // all type of Entities
   // Stores each HashMap of Entities into a HashMap. For example, we could
   // have a HashMap for Vehicles and a HashMap for Clients
   HashMap<String, HashMap<Integer, EntityInterface>> storage
       = new HashMap<String, HashMap<Integer, EntityInterface>>();
 
   /**
-   * GET all entities of the type. The returned HashMap could be empty.
-   */
-  @Override
-  public HashMap<Integer, EntityInterface> get(String entityName) {
-    return storage.get(entityName);
-  }
-
-  /**
-   * GET all entities of the type with some filters (String is the field nam,
-   * Object is the filter value). The returned HashMap could be empty.
-   */
-  @Override
-  public HashMap<Integer, EntityInterface> get(String entityName,
-      HashMap<String, Object> filters) {
-
-    HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
-    HashMap<Integer, EntityInterface> filteredEntityStorage = new HashMap<>();
-
-    // Iterates through every entity to filter, and put entities that passed
-    // the filters into filteredEntityStorage to return
-    for (Map.Entry<Integer, EntityInterface> entry : entityStorage.entrySet()) {
-      Integer id = entry.getKey();
-      EntityInterface entity = entry.getValue();
-
-      try {
-        @SuppressWarnings("unchecked")
-        Class<? super EntityInterface> clazz = (Class<? super EntityInterface>) Class
-            .forName("model.pojo." + entityName);
-
-        // Checks for each filter field using getters on this Entity.
-        boolean filterMatched = true;
-        for (Map.Entry<String, Object> filter : filters.entrySet()) {
-          String filterKey = filter.getKey();
-          Object filterValue = filter.getValue();
-
-          // Converts the filtering key to the method name, i.e. id -> getId.
-          filterKey = "get" + filterKey.substring(0, 1).toUpperCase()
-              + filterKey.substring(1);
-          Method method = clazz.getMethod(filterKey);
-
-          Object entityValue = method.invoke(entity);
-
-          // If the two values differ, Marks object invalid and stops checking
-          // the rest of the filters.
-          if ((entityValue != null || filterValue != null)
-              && (entityValue == null || !entityValue.equals(filterValue))) {
-            filterMatched = false;
-            break;
-          }
-        }
-        if (filterMatched) {
-          filteredEntityStorage.put(id, entity);
-        }
-
-      } catch (ClassNotFoundException e) {
-        return null;
-      } catch (NoSuchMethodException e) {
-        return null;
-      } catch (IllegalAccessException e) {
-        return null;
-      } catch (IllegalArgumentException e) {
-        return null;
-      } catch (InvocationTargetException e) {
-        return null;
-      }
-
-    }
-    return filteredEntityStorage;
-  }
-
-  /**
-   * GET all entities of the type with id. Returns null if none.
-   */
-  @Override
-  public EntityInterface get(String entityName, int id) {
-    return storage.get(entityName).get(id);
-  }
-
-  /**
-   * CREATE an entity of the type with the specified fields.
+   * CREATE an entity of the type with the specific fields.
    */
   @Override
   public boolean create(String entityName, HashMap<String, Object> fields) {
     HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
+    if (entityStorage == null) {
+      entityStorage = new HashMap<>();
+      storage.put(entityName, entityStorage);
+    }
 
     try {
       @SuppressWarnings("unchecked")
@@ -151,13 +73,14 @@ public class InMemoryDaoImpl implements Crudable {
   }
 
   /**
-   * CREATE a list of entities of the type with the list of specified fields.
+   * CREATE a list of entities of the type with the list of specific fields.
+   * 
    * @return false if one of the entity creation fails.
    */
   @Override
   public boolean create(String entityName,
       List<HashMap<String, Object>> fieldList) {
-    
+
     // Iterates through all the entities to create.
     for (HashMap<String, Object> fields : fieldList) {
       if (create(entityName, fields) == false) {
@@ -168,13 +91,86 @@ public class InMemoryDaoImpl implements Crudable {
   }
 
   /**
-   * UPDATE an entity of the type with the specified id, with the fields.
+   * GET the entity of the type with id. Returns null if none.
+   */
+  @Override
+  public EntityInterface read(String entityName, int id) {
+    return storage.get(entityName).get(id);
+  }
+
+  /**
+   * GET all entities of the type. The returned HashMap could be empty.
+   */
+  @Override
+  public HashMap<Integer, EntityInterface> read(String entityName) {
+    return storage.get(entityName);
+  }
+
+  /**
+   * GET all entities of the type with some filters (String is the field nam,
+   * Object is the filter value). The returned HashMap could be empty.
+   */
+  @Override
+  public HashMap<Integer, EntityInterface> read(String entityName,
+      HashMap<String, Object> filters) {
+
+    HashMap<Integer, EntityInterface> entityStorage = storage.get(entityName);
+    HashMap<Integer, EntityInterface> filteredEntityStorage = new HashMap<>();
+
+    // Iterates through every entity to filter, and put entities that passed
+    // the filters into filteredEntityStorage to return
+    for (Map.Entry<Integer, EntityInterface> entry : entityStorage.entrySet()) {
+      Integer id = entry.getKey();
+      EntityInterface entity = entry.getValue();
+
+      try {
+        @SuppressWarnings("unchecked")
+        Class<? super EntityInterface> clazz = (Class<? super EntityInterface>) Class
+            .forName("model.pojo." + entityName);
+
+        // Checks for each filter field using getters on this Entity.
+        boolean filterMatched = true;
+        for (Map.Entry<String, Object> filter : filters.entrySet()) {
+          String filterKey = filter.getKey();
+          Object filterValue = filter.getValue();
+
+          // Converts the filtering key to the method name, i.e. id -> getId.
+          filterKey = "get" + filterKey.substring(0, 1).toUpperCase()
+              + filterKey.substring(1);
+          Method method = clazz.getMethod(filterKey);
+
+          Object entityValue = method.invoke(entity);
+
+          // If the two values differ, Marks object invalid and stops checking
+          // the rest of the filters.
+          if ((entityValue != null || filterValue != null)
+              && (entityValue == null || !entityValue.equals(filterValue))) {
+            filterMatched = false;
+            break;
+          }
+        }
+        if (filterMatched) {
+          filteredEntityStorage.put(id, entity);
+        }
+
+      } catch (ClassNotFoundException | NoSuchMethodException
+          | IllegalAccessException | IllegalArgumentException
+          | InvocationTargetException e) {
+        return null;
+      }
+
+    }
+    return filteredEntityStorage;
+  }
+
+  /**
+   * UPDATE an entity of the type with the specific id, with the fields.
    * TODO This method should not update the id, need to do a check.
    */
   @Override
   public boolean update(String entityName, int id,
       HashMap<String, Object> fields) {
-    EntityInterface entity = get(entityName, id);
+    EntityInterface entity = read(entityName, id);
 
     try {
       @SuppressWarnings("unchecked")
@@ -205,7 +201,7 @@ public class InMemoryDaoImpl implements Crudable {
   }
 
   /**
-   * DELETE an entity of the type with the specified id.
+   * DELETE an entity of the type with the specific id.
    * 
    * @return true if an non-null entity is deleted
    */
