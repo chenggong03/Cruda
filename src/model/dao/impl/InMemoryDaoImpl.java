@@ -10,10 +10,8 @@ import model.dao.Crudable;
 import model.pojo.EntityInterface;
 
 /**
- * Implements the CRUD methods of DAO and store entities in memory.
- * Id is not self generated.
+ * Implements the CRUD methods of DAO and stores entities in memory.
  * @author gongcheng
- *
  */
 public class InMemoryDaoImpl implements Crudable {
 
@@ -24,6 +22,10 @@ public class InMemoryDaoImpl implements Crudable {
 
   /**
    * CREATE an entity of the type with the specific fields.
+   * Id is not self generated and can be overwritten.
+   * @param entityName is the entity type to be acted upon
+   * @param fields contains the user specified info
+   * @return true if successfully created
    */
   @Override
   public boolean create(String entityName, HashMap<String, Object> fields) {
@@ -32,66 +34,15 @@ public class InMemoryDaoImpl implements Crudable {
       entityStorage = new HashMap<>();
       storage.put(entityName, entityStorage);
     }
-
-    try {
-      @SuppressWarnings("unchecked")
-      Class<? super EntityInterface> clazz = (Class<? super EntityInterface>) Class
-          .forName("model.pojo." + entityName);
-
-      // Creates a new entity object and fills in the fields.
-      EntityInterface entity = (EntityInterface) clazz.newInstance();
-      for (Map.Entry<String, Object> field : fields.entrySet()) {
-        String filterKey = field.getKey();
-        Object filterValue = field.getValue();
-        
-        // TODO use a HashMap/external file for the keys
-        Class<?> paramClazz;
-        if ("id".equals(filterKey) || "year".equals(filterKey)) {
-          paramClazz = int.class;
-        } else {
-          paramClazz = String.class;
-        }
-
-        // Converts the filtering key to the method name, i.e. id -> getId.
-        filterKey = "set" + filterKey.substring(0, 1).toUpperCase()
-            + filterKey.substring(1);
-        
-        
-        // Calls the setter method on the field.
-        Method method = clazz.getMethod(filterKey, paramClazz);
-        
-        // TODO use a HashMap/external file for the keys
-        if (paramClazz == int.class) {
-          filterValue = Integer.parseInt((String) filterValue);
-        }
-        method.invoke(entity, filterValue);
-      }
-
-      // This Integer cast will be covered in the exceptions related to
-      // method.invoke method call above.
-      Object id = fields.get("id");
-      if (id == null) {
-        System.out.println("id == null");
-        return false;
-      }
-
-      // Stores the new entity back in memory.
-      entityStorage.put(Integer.parseInt((String) id), entity);
-
-    } catch (ClassNotFoundException | NoSuchMethodException
-        | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException | InstantiationException e) {
-      System.out.println("Exception: " + e.toString());
-      e.printStackTrace();
-      return false;
-    }
-
-    return true;
+    
+    return reflectiveSet(entityName, fields, null, entityStorage);
   }
 
   /**
    * CREATE a list of entities of the type with the list of specific fields.
-   * 
+   * Id is not self generated and can be overwritten.
+   * @param entityName is the entity type to be acted upon
+   * @param fieldList contains the user specified lists of fields
    * @return false if one of the entity creation fails.
    */
   @Override
@@ -109,6 +60,9 @@ public class InMemoryDaoImpl implements Crudable {
 
   /**
    * GET the entity of the type with id. Returns null if none.
+   * @param entityName is the entity type to be acted upon
+   * @param id is the id of the entity to be read
+   * @return the read EntityInterface, null if none read
    */
   @Override
   public EntityInterface read(String entityName, int id) {
@@ -121,6 +75,8 @@ public class InMemoryDaoImpl implements Crudable {
 
   /**
    * GET all entities of the type. The returned HashMap could be empty.
+   * @param entityName is the entity type to be acted upon
+   * @return a HashMap of EntityInterfaces of that entity type
    */
   @Override
   public HashMap<Integer, EntityInterface> read(String entityName) {
@@ -130,6 +86,9 @@ public class InMemoryDaoImpl implements Crudable {
   /**
    * GET all entities of the type with some filters (String is the field nam,
    * Object is the filter value). The returned HashMap could be empty.
+   * @param entityName is the entity type to be acted upon
+   * @param filters contains the user specified info to filter the entities
+   * @return a HashMap of filtered EntityInterfaces of that entity type
    */
   @Override
   public HashMap<Integer, EntityInterface> read(String entityName,
@@ -190,46 +149,97 @@ public class InMemoryDaoImpl implements Crudable {
   /**
    * UPDATE an entity of the type with the specific id, with the fields.
    * TODO This method should not update the id, need to do a check.
+   * @param entityName is the entity type to be acted upon
+   * @param id is the id of the entity to be read
+   * @param fields contains the user specified info to update
+   * @return true if modified, false otherwise
    */
   @Override
   public boolean update(String entityName, int id,
       HashMap<String, Object> fields) {
     EntityInterface entity = read(entityName, id);
     if (entity == null) {
+      System.out.println("entity == null");
       return false;
     }
 
+    return reflectiveSet(entityName, fields, entity, null);
+
+  }
+  
+  
+  /**
+   * Helper method for only create and update, since they user similar setter
+   * operations.
+   * @param entityName is the entity type to be acted upon
+   * @param fields contains the user specified info to update
+   * @param entity is the entity to be acted upon. It should be null when using
+   * create method
+   * @param entityStorage is the entityStorage used to store entity in. It
+   * should be null when using update method
+   * @return true if modified, false otherwise
+   */
+  private boolean reflectiveSet(String entityName, HashMap<String, Object>
+      fields, EntityInterface entity, HashMap<Integer, EntityInterface>
+      entityStorage) {
     try {
       @SuppressWarnings("unchecked")
       Class<? super EntityInterface> clazz = (Class<? super EntityInterface>) Class
           .forName("model.pojo." + entityName);
-
+      
+      // entity is only null when create method is called.
+      if (entity == null) {
+        entity = (EntityInterface) clazz.newInstance();
+      }
+      
       // Updates the fields to the entity.
       for (Map.Entry<String, Object> field : fields.entrySet()) {
         String filterKey = field.getKey();
         Object filterValue = field.getValue();
 
+        // TODO use a HashMap/external file for the keys
+        Class<?> paramClazz;
+        if ("id".equals(filterKey) || "year".equals(filterKey)) {
+          paramClazz = int.class;
+        } else {
+          paramClazz = String.class;
+        }
+    
         // Converts the filtering key to the method name, i.e. id -> getId.
+        // command should be "set" or "get" only.
         filterKey = "set" + filterKey.substring(0, 1).toUpperCase()
             + filterKey.substring(1);
-        Method method = clazz.getMethod(filterKey);
-
+        
+        
         // Calls the setter method on the field.
+        Method method = clazz.getMethod(filterKey, paramClazz);
+        
+        // TODO use a HashMap/external file for the keys
+        if (paramClazz == int.class) {
+          filterValue = Integer.parseInt((String) filterValue);
+        }
         method.invoke(entity, filterValue);
       }
-
+      
+      // entityStorage is only used when create method is called.
+      if (entityStorage != null) {
+        entityStorage.put(Integer.parseInt((String)fields.get("id")), entity);
+      }
+      
     } catch (ClassNotFoundException | NoSuchMethodException
         | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException e) {
+        | InvocationTargetException | InstantiationException e) {
+      e.printStackTrace();
       return false;
     }
     return true;
-
+    
   }
 
   /**
    * DELETE an entity of the type with the specific id.
-   * 
+   * @param entityName is the entity type to be acted upon
+   * @param id is the id of the entity to be read
    * @return true if an non-null entity is deleted
    */
   @Override

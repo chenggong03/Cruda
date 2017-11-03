@@ -2,9 +2,7 @@ package model.pojo;
 
 /**
  * Vehicle POJO class that is the basic unit of the vehicle
- * 
  * @author gongcheng
- *
  */
 public class Vehicle implements EntityInterface {
   private int id;
